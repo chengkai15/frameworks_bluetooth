@@ -559,6 +559,11 @@ bt_status_t bt_sal_gatt_server_connect(bt_controller_id_t id, bt_address_t* addr
     return sal_send_req(req);
 }
 
+bt_status_t bt_sal_gatt_server_connect_bear(bt_address_t* addr, ble_addr_type_t addr_type, uint8_t bear_type)
+{
+    return BT_STATUS_UNSUPPORTED;
+}
+
 static void STACK_CALL(conn_cancel)(void* args)
 {
     sal_adapter_req_t* req = args;
