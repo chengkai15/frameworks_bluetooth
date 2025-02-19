@@ -33,6 +33,9 @@
 #include "bt_debug.h"
 #include "utils.h"
 
+#include "uv.h"
+#include "uv_async_queue.h"
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -73,11 +76,23 @@
  * Public Types
  ****************************************************************************/
 typedef struct {
+    uv_loop_t loop;
+    uv_async_queue_t async;
+    uv_thread_t thread;
+    uv_sem_t ready;
+    bool async_api;
+} bttool_t;
+
+typedef struct {
     char* cmd; /* command */
     int (*func)(void* handle, int argc, char** argv); /* command func */
     int opt; /* use option parameters */
     char* help; /* usage  */
 } bt_command_t;
+
+int execute_async_command(void* handle, int argc, char* argv[]);
+int bttool_async_ins_init(bttool_t* bttool);
+void bttool_async_ins_uninit(bttool_t* bttool);
 
 int execute_command_in_table(void* handle, bt_command_t* table, uint32_t table_size, int argc, char* argv[]);
 int execute_command_in_table_offset(void* handle, bt_command_t* table, uint32_t table_size, int argc, char* argv[], uint8_t offset);

@@ -62,16 +62,21 @@ typedef struct {
     uint8_t value[0];
 } bt_property_value_t;
 
+static void storage_commit(service_work_t* work, void* userdata)
+{
+    property_commit();
+}
+
 static int storage_set_key(const char* key, void* data, size_t length)
 {
     int ret;
 
-    ret = property_set_binary(key, data, length, false);
+    ret = property_set_binary(key, data, length, true);
     if (ret < 0) {
         BT_LOGE("key %s set error!", key);
         return ret;
     }
-    property_commit();
+    service_loop_work(NULL, storage_commit, NULL);
     return ret;
 }
 
@@ -187,12 +192,12 @@ static void adapter_properties_default(adapter_storage_t* prop)
 
 int bt_storage_save_adapter_info(adapter_storage_t* adapter)
 {
-    property_set_binary(BT_KVDB_ADAPTERINFO_NAME, adapter->name, sizeof(adapter->name), false);
-    property_set_int32(BT_KVDB_ADAPTERINFO_COD, adapter->class_of_device);
-    property_set_int32(BT_KVDB_ADAPTERINFO_IOCAP, adapter->io_capability);
-    property_set_int32(BT_KVDB_ADAPTERINFO_SCAN, adapter->scan_mode);
-    property_set_int32(BT_KVDB_ADAPTERINFO_BOND, adapter->bondable);
-    property_commit();
+    property_set_binary(BT_KVDB_ADAPTERINFO_NAME, adapter->name, sizeof(adapter->name), true);
+    property_set_int32_oneway(BT_KVDB_ADAPTERINFO_COD, adapter->class_of_device);
+    property_set_int32_oneway(BT_KVDB_ADAPTERINFO_IOCAP, adapter->io_capability);
+    property_set_int32_oneway(BT_KVDB_ADAPTERINFO_SCAN, adapter->scan_mode);
+    property_set_int32_oneway(BT_KVDB_ADAPTERINFO_BOND, adapter->bondable);
+    service_loop_work(NULL, storage_commit, NULL);
     return 0;
 }
 
@@ -351,9 +356,10 @@ static void bt_storage_delete(char* key, uint16_t items, char* prop_name)
         addr = (bt_address_t*)prop_value->value + i;
         GEN_PROP_KEY(prop_name, key, addr, PROP_NAME_MAX);
         property_delete(prop_name);
-        property_commit();
     }
+
     free(prop_value);
+    service_loop_work(NULL, storage_commit, NULL);
 }
 
 int bt_storage_save_bonded_device(remote_device_properties_t* remote, uint16_t size)

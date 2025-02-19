@@ -41,6 +41,8 @@ enum {
 #define PERSIST_BT_STACK_LOG_EN "persist.bluetooth.log.stack_enable"
 #define PERSIST_BT_STACK_LOG_MASK "persist.bluetooth.log.stack_mask"
 #define PERSIST_BT_SNOOP_LOG_EN "persist.bluetooth.log.snoop_enable"
+#define PERSIST_BT_SNOOP_FILE_PATH "persist.bluetooth.log.snoop_path"
+
 // #define PERSIST_BT_SNOOP_LOG_CID_MASK "persist.bluetooth.log.snoop_cid_mask"
 // #define PERSIST_BT_SNOOP_LOG_PKT_MASK "persist.bluetooth.log.snoop_pkt_mask"
 
@@ -107,7 +109,7 @@ static int stack_log_setup(void)
     return 0;
 }
 
-static void bt_log_module_enable(int id, bool changed)
+void bt_log_module_enable(int id, bool changed)
 {
     const char* property = NULL;
     syslog(LOG_DEBUG, "%s, id %d\n", __func__, id);
@@ -116,7 +118,7 @@ static void bt_log_module_enable(int id, bool changed)
         if (g_logger.snoop_enable)
             return;
 
-        if (btsnoop_log_open() != BT_STATUS_SUCCESS) {
+        if (btsnoop_log_enable() != BT_STATUS_SUCCESS) {
             syslog(LOG_ERR, "%s\n", "enable snoop log fail");
             return;
         }
@@ -149,7 +151,7 @@ static void bt_log_module_enable(int id, bool changed)
     syslog(LOG_INFO, "%s enabled\n", log_id_str(id));
 }
 
-static void bt_log_module_disable(int id, bool changed)
+void bt_log_module_disable(int id, bool changed)
 {
     const char* property = NULL;
     syslog(LOG_DEBUG, "%s id %d\n", __func__, id);
@@ -158,7 +160,7 @@ static void bt_log_module_disable(int id, bool changed)
         if (!g_logger.snoop_enable)
             return;
 
-        btsnoop_log_close();
+        btsnoop_log_disable();
         g_logger.snoop_enable = 0;
         property = PERSIST_BT_SNOOP_LOG_EN;
         break;
@@ -241,6 +243,8 @@ static void property_monitor_cb(service_poll_t* poll,
 void bt_log_server_init(void)
 {
 #if defined(CONFIG_KVDB) && defined(__NuttX__)
+    char path[SNOOP_PATH_MAX_LEN];
+
     /** framework log init */
     g_logger.framework_level = property_get_int32(PERSIST_BT_FRAMEWORK_LOG_LEVEL, DEFAULT_BT_LOG_LEVEL);
 
@@ -251,10 +255,16 @@ void bt_log_server_init(void)
     if (g_logger.stack_enable)
         stack_log_setup();
 
+    if (property_get_binary(PERSIST_BT_SNOOP_FILE_PATH, path, SNOOP_PATH_MAX_LEN) <= 0) {
+        strlcpy(path, CONFIG_BLUETOOTH_SNOOP_LOG_DEFAULT_PATH, SNOOP_PATH_MAX_LEN);
+    }
     /** snoop log init */
+    if (btsnoop_log_init(path) != BT_STATUS_SUCCESS)
+        syslog(LOG_ERR, "init snoop log fail\n");
+
     g_logger.snoop_enable = property_get_int32(PERSIST_BT_SNOOP_LOG_EN, 0);
     if (g_logger.snoop_enable) {
-        if (btsnoop_log_open() != BT_STATUS_SUCCESS)
+        if (btsnoop_log_enable() != BT_STATUS_SUCCESS)
             syslog(LOG_ERR, "%s\n", "enable snoop log fail");
     }
 
@@ -288,7 +298,9 @@ void bt_log_server_cleanup(void)
 
     /** snoop log deinit */
     if (g_logger.snoop_enable)
-        btsnoop_log_close();
+        btsnoop_log_disable();
+
+    btsnoop_log_uninit();
 
     /** stack log deinit */
     if (g_logger.stack_enable)

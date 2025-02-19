@@ -35,6 +35,9 @@ endif
 	CSRCS += service/ipc/socket/src/*.c
 	CSRCS += framework/socket/*.c
   CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/connectivity/bluetooth/service/ipc/socket/include
+ifeq ($(CONFIG_BLUETOOTH_FRAMEWORK_ASYNC), y)
+	CSRCS += framework/socket/async/*.c
+endif #CONFIG_BLUETOOTH_FRAMEWORK_ASYNC
 else
 endif
 endif
@@ -201,6 +204,9 @@ ifeq ($(CONFIG_BLUETOOTH_TOOLS), y)
 	CSRCS += tools/utils.c
 	CSRCS += tools/log.c
 	CSRCS += tools/uv_thread_loop.c
+ifeq ($(CONFIG_BLUETOOTH_FRAMEWORK_ASYNC), y)
+	CSRCS += tools/async/gap.c
+endif
 ifeq ($(CONFIG_BLUETOOTH_BLE_ADV), y)
 	CSRCS += tools/adv.c
 endif

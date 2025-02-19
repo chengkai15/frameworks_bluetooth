@@ -311,6 +311,12 @@ choice
 	config BLUETOOTH_FRAMEWORK_SOCKET_IPC
 		bool "use socket ipc api"
 endchoice
+
+config BLUETOOTH_FRAMEWORK_ASYNC
+	bool "Enable bluetooth framework async api"
+	default n
+	help
+		Enable bluetooth framework async api
 endif #BLUETOOTH_FRAMEWORK
 
 if BLUETOOTH_FRAMEWORK_SOCKET_IPC
@@ -434,6 +440,12 @@ config LE_DLF_SUPPORT
 
 endif #BLUETOOTH_BLE_SUPPORT
 endif #BLUETOOTH_SERVICE
+
+config MAX_SNOOP_FILE_SIZE
+	int "Maximum size of the snoop log file"
+	default 1048576
+	help
+		Maximum size of the snoop log file
 
 config BLUETOOTH_TOOLS
 	bool "Enable bluetooth profile test tools"
