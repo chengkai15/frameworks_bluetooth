@@ -214,6 +214,14 @@ if(CONFIG_BLUETOOTH)
     list(APPEND CSRCS ${BLUETOOTH_DIR}/service/common/storage.c)
   endif()
 
+  if(CONFIG_BLUETOOTH_STORAGE_UPDATE)
+    list(
+      APPEND
+      CSRCS
+      ${BLUETOOTH_DIR}/tools/storage_update/storage_version_4.c
+      ${BLUETOOTH_DIR}/tools/storage_update/storage_version_5.c)
+  endif()
+
   if(CONFIG_BLUETOOTH_DEBUG_MEMORY)
     list(APPEND CSRCS ${BLUETOOTH_DIR}/debug/bt_memory.c)
   endif()
@@ -334,11 +342,11 @@ if(CONFIG_BLUETOOTH)
         OR CONFIG_BLUETOOTH_BLE_AUDIO))
       list(REMOVE_ITEM CSRCS
            ${BLUETOOTH_DIR}/service/profiles/system/media_system.c)
+    else()
+      file(GLOB APPEND_FILES
+           ${BLUETOOTH_DIR}/service/profiles/audio_interface/*.c)
+      list(APPEND CSRCS ${APPEND_FILES})
     endif()
-
-    file(GLOB APPEND_FILES
-         ${BLUETOOTH_DIR}/service/profiles/audio_interface/*.c)
-    list(APPEND CSRCS ${APPEND_FILES})
 
     if(CONFIG_BLUETOOTH_GATT_CLIENT)
       list(APPEND CSRCS ${BLUETOOTH_DIR}/service/profiles/gatt/gattc_event.c)
@@ -577,7 +585,10 @@ if(CONFIG_BLUETOOTH)
 
     if(CONFIG_BLUETOOTH_LOG)
         list(APPEND CSRCS ${BLUETOOTH_DIR}/tools/log.c)
-        list(APPEND CSRCS ${BLUETOOTH_DIR}/debug/bt_trace.c)
+    endif()
+
+    if(CONFIG_BLUETOOTH_DEBUG_TRACE)
+      list(APPEND CSRCS ${BLUETOOTH_DIR}/debug/bt_trace.c)
     endif()
 
     if(CONFIG_BLUETOOTH_SPP)
@@ -622,6 +633,10 @@ if(CONFIG_BLUETOOTH)
 
     if(CONFIG_BLUETOOTH_LEAUDIO_TBS)
       list(APPEND CSRCS ${BLUETOOTH_DIR}/tools/lea_tbs.c)
+    endif()
+
+    if(CONFIG_BLUETOOTH_STORAGE_UPDATE)
+      list(APPEND CSRCS ${BLUETOOTH_DIR}/tools/storage_update/storage_tool.c)
     endif()
   endif()
 
@@ -669,6 +684,7 @@ if(CONFIG_BLUETOOTH)
       )
 
       list(APPEND INCDIR ${NUTTX_APPS_DIR}/vendor/xiaomi/vela/bluelet/inc)
+      list(APPEND INCDIR ${BLUETOOTH_DIR}/service/stacks/bluelet/include)
     endif()
 
     if(CONFIG_BLUETOOTH_STACK_BREDR_ZBLUE OR CONFIG_BLUETOOTH_STACK_LE_ZBLUE)
@@ -677,7 +693,6 @@ if(CONFIG_BLUETOOTH)
            ${NUTTX_APPS_DIR}/external/zblue/zblue/port/include/kernel/include)
     endif()
 
-    list(APPEND INCDIR ${BLUETOOTH_DIR}/service/stacks/bluelet/include)
     list(APPEND INCDIR ${BLUETOOTH_DIR}/service/ipc)
   endif()
 
@@ -706,6 +721,11 @@ if(CONFIG_BLUETOOTH)
   if(CONFIG_BLUETOOTH_TOOLS)
     list(APPEND INCDIR ${BLUETOOTH_DIR}/tools)
   endif()
+
+  if(CONFIG_BLUETOOTH_STORAGE_UPDATE)
+    list(APPEND INCDIR ${BLUETOOTH_DIR}/tools/storage_update)
+  endif()
+
 
   if(CONFIG_ARCH_SIM)
     list(APPEND CFLAGS -O0)
@@ -866,6 +886,24 @@ if(CONFIG_BLUETOOTH)
         bt_upgrade
         SRCS
         ${BLUETOOTH_DIR}/tools/storage_transform.c
+        INCLUDE_DIRECTORIES
+        ${INCDIR}
+        STACKSIZE
+        8192
+        PRIORITY
+        ${SCHED_PRIORITY_DEFAULT}
+        COMPILE_FLAGS
+        ${CFLAGS}
+        DEPENDS
+        libbluetooth)
+  endif()
+
+  if(CONFIG_BLUETOOTH_STORAGE_UPDATE)
+    nuttx_add_application(
+        NAME
+        bt_storage_update
+        SRCS
+        ${BLUETOOTH_DIR}/tools/storage_update/storage_update.c
         INCLUDE_DIRECTORIES
         ${INCDIR}
         STACKSIZE

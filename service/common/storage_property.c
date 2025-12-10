@@ -30,30 +30,6 @@
 #include "utils/log.h"
 #include "uv_ext.h"
 
-#define GEN_PROP_KEY(buf, key, address, len) snprintf((buf), (len), "%s%02X:%02X:%02X:%02X:%02X:%02X", \
-    (key),                                                                                             \
-    (address)->addr[5], (address)->addr[4], (address)->addr[3],                                        \
-    (address)->addr[2], (address)->addr[1], (address)->addr[0])
-
-#define PARSE_PROP_KEY(addr_str, name, name_prefix_len, addr_str_len, addr_ptr) \
-    do {                                                                        \
-        strlcpy((addr_str), (name) + (name_prefix_len), (addr_str_len));        \
-        bt_addr_str2ba((addr_str), (addr_ptr));                                 \
-    } while (0)
-
-#define ERROR_ADAPTERINFO_VALUE -1
-
-#define BT_KVDB_ADAPTERINFO_NAME "persist.bluetooth.adapterInfo.name"
-#define BT_KVDB_ADAPTERINFO_COD "persist.bluetooth.adapterInfo.class_of_device"
-#define BT_KVDB_ADAPTERINFO_IOCAP "persist.bluetooth.adapterInfo.io_capability"
-#define BT_KVDB_ADAPTERINFO_SCAN "persist.bluetooth.adapterInfo.scan_mode"
-#define BT_KVDB_ADAPTERINFO_BOND "persist.bluetooth.adapterInfo.bondable"
-
-#define BT_KVDB_ADAPTERINFO "persist.bluetooth.adapterInfo."
-#define BT_KVDB_BTBOND "persist.bluetooth.btbonded."
-#define BT_KVDB_BLEBOND "persist.bluetooth.blebonded."
-#define BT_KVDB_BLEWHITELIST "persist.bluetooth.whitelist."
-
 typedef struct {
     void* key;
     uint16_t items;
@@ -65,7 +41,8 @@ typedef struct {
 static void storage_save_adapter_info(service_work_t* work, void* userdata)
 {
     adapter_storage_t* adapter = (adapter_storage_t*)userdata;
-    property_set_binary(BT_KVDB_ADAPTERINFO_NAME, adapter->name, sizeof(adapter->name), false);
+    property_set_binary(BT_KVDB_VERSION_KEY, BT_STORAGE_CURRENT_VERSION, strlen(BT_STORAGE_CURRENT_VERSION) + 1, false);
+    property_set_binary(BT_KVDB_ADAPTERINFO_NAME, adapter->name, strlen(adapter->name) + 1, false);
     property_set_int32(BT_KVDB_ADAPTERINFO_COD, adapter->class_of_device);
     property_set_int32(BT_KVDB_ADAPTERINFO_IOCAP, adapter->io_capability);
     property_set_int32(BT_KVDB_ADAPTERINFO_SCAN, adapter->scan_mode);
@@ -354,7 +331,7 @@ static void callback_load_key(const char* name, const char* value, void* cookie)
     prop_value->offset++;
 }
 
-static void bt_storage_delete(char* key, uint16_t items, char* prop_name)
+void bt_storage_delete(char* key, uint16_t items, char* prop_name)
 {
     bt_property_value_t* prop_value;
     uint32_t total_length;
@@ -564,6 +541,49 @@ int bt_storage_load_le_bonded_device(load_storage_callback_t cb)
     storage_get_key(BT_KVDB_BLEBOND, (void*)prop_value, sizeof(remote_device_le_properties_t), (void*)cb);
     free(prop_value);
 
+    return 0;
+}
+
+int bt_storage_properties_destory(void)
+{
+    uint16_t items = 0;
+    char* prop_name;
+    int ret = 0;
+
+    prop_name = (char*)malloc(PROP_NAME_MAX);
+    if (!prop_name) {
+        BT_LOGE("property_name malloc failed!");
+        return -ENOMEM;
+    }
+
+    /* remove all BLE bond device property */
+    property_list(callback_le_count, &items);
+    bt_storage_delete(BT_KVDB_BLEBOND, items, prop_name);
+
+    /* remove all whitelist device property */
+    items = 0;
+    property_list(callback_whitelist_count, &items);
+    bt_storage_delete(BT_KVDB_BLEWHITELIST, items, prop_name);
+
+    /* remove all BREDR bond device property */
+    items = 0;
+    property_list(callback_bt_count, &items);
+    bt_storage_delete(BT_KVDB_BTBOND, items, prop_name);
+
+    free(prop_name);
+    /* remove adapter info property */
+    ret |= property_delete(BT_KVDB_VERSION_KEY);
+    ret |= property_delete(BT_KVDB_ADAPTERINFO_NAME);
+    ret |= property_delete(BT_KVDB_ADAPTERINFO_COD);
+    ret |= property_delete(BT_KVDB_ADAPTERINFO_IOCAP);
+    ret |= property_delete(BT_KVDB_ADAPTERINFO_SCAN);
+    ret |= property_delete(BT_KVDB_ADAPTERINFO_BOND);
+    if (ret) {
+        BT_LOGE("property_delete failed!");
+        return ret;
+    }
+
+    property_commit();
     return 0;
 }
 
