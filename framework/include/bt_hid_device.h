@@ -269,6 +269,19 @@ typedef void (*hidd_virtual_unplug_callback)(void* cookie, bt_address_t* addr);
  * @brief HID device event callbacks structure
  *
  */
+/**
+ * @brief Callback for SCI mode change on device side.
+ */
+typedef void (*hidd_mode_changed_callback)(void* cookie, bt_address_t* addr, uint8_t mode);
+
+/**
+ * @brief Suspend state callback.
+ * @param cookie - Callback cookie.
+ * @param addr - Remote device address.
+ * @param suspend - true if suspend, false if exit suspend.
+ */
+typedef void (*hidd_suspend_callback)(void* cookie, bt_address_t* addr, bool suspend);
+
 typedef struct {
     size_t size;
     hidd_app_state_callback app_state_cb;
@@ -277,6 +290,8 @@ typedef struct {
     hidd_set_report_callback set_report_cb;
     hidd_receive_report_callback receive_report_cb;
     hidd_virtual_unplug_callback virtual_unplug_cb;
+    hidd_mode_changed_callback mode_changed_cb;
+    hidd_suspend_callback suspend_cb;
 } hid_device_callbacks_t;
 /**
  * @endcond
