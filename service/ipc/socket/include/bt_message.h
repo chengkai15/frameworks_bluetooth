@@ -37,6 +37,7 @@ extern "C" {
 #include "bt_message_hfp_ag.h"
 #include "bt_message_hfp_hf.h"
 #include "bt_message_hid_device.h"
+#include "bt_message_hid_host.h"
 #include "bt_message_l2cap.h"
 #include "bt_message_log.h"
 #include "bt_message_manager.h"
@@ -62,6 +63,7 @@ typedef enum {
 #include "bt_message_hfp_ag.h"
 #include "bt_message_hfp_hf.h"
 #include "bt_message_hid_device.h"
+#include "bt_message_hid_host.h"
 #include "bt_message_l2cap.h"
 #include "bt_message_log.h"
 #include "bt_message_manager.h"
@@ -85,6 +87,7 @@ typedef enum {
 #include "bt_message_hfp_ag.h"
 #include "bt_message_hfp_hf.h"
 #include "bt_message_hid_device.h"
+#include "bt_message_hid_host.h"
 #include "bt_message_l2cap.h"
 #include "bt_message_manager.h"
 #include "bt_message_pan.h"
@@ -118,6 +121,7 @@ typedef struct
         bt_spp_result_t spp_r;
         bt_pan_result_t pan_r;
         bt_hid_device_result_t hidd_r;
+        bt_hid_host_result_t hidh_r;
         bt_l2cap_result_t l2cap_r;
     };
     union {
@@ -167,6 +171,8 @@ typedef struct
 
         bt_message_hid_device_t hidd_pl;
         bt_message_hid_device_callbacks_t hidd_cb;
+        bt_message_hid_host_t hidh_pl;
+        bt_message_hid_host_callbacks_t hidh_cb;
 
         bt_message_l2cap_t l2cap_pl;
         bt_message_l2cap_callbacks_t l2cap_cb;

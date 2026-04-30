@@ -71,6 +71,10 @@ if(CONFIG_BLUETOOTH)
     list(APPEND CSRCS ${BLUETOOTH_DIR}/framework/api/bt_hid_device.c)
   endif()
 
+  if(CONFIG_BLUETOOTH_HID_HOST)
+    list(APPEND CSRCS ${BLUETOOTH_DIR}/framework/api/bt_hid_host.c)
+  endif()
+
   if(CONFIG_BLUETOOTH_GATT_CLIENT)
     list(APPEND CSRCS ${BLUETOOTH_DIR}/framework/api/bt_gattc.c)
   endif()
@@ -157,6 +161,11 @@ if(CONFIG_BLUETOOTH)
     if(CONFIG_BLUETOOTH_HID_DEVICE)
       list(APPEND CSRCS ${BLUETOOTH_DIR}/framework/socket/bt_hid_device.c)
       list(APPEND CSRCS ${BLUETOOTH_DIR}/service/ipc/socket/src/bt_socket_hid_device.c)
+    endif()
+
+    if(CONFIG_BLUETOOTH_HID_HOST)
+      list(APPEND CSRCS ${BLUETOOTH_DIR}/framework/socket/bt_hid_host.c)
+      list(APPEND CSRCS ${BLUETOOTH_DIR}/service/ipc/socket/src/bt_socket_hid_host.c)
     endif()
 
     if(CONFIG_BLUETOOTH_GATT_CLIENT)
@@ -310,6 +319,11 @@ if(CONFIG_BLUETOOTH)
         list(APPEND CSRCS ${BLUETOOTH_DIR}/service/stacks/zephyr/sal_hogp_device_interface.c)
       endif()
 
+      if(CONFIG_BLUETOOTH_HID_HOST)
+        list(APPEND CSRCS ${BLUETOOTH_DIR}/service/stacks/zephyr/sal_hid_host_interface.c)
+        list(APPEND CSRCS ${BLUETOOTH_DIR}/service/stacks/zephyr/sal_hogp_host_interface.c)
+      endif()
+
       if(CONFIG_BLUETOOTH_HFP_HF)
         list(APPEND CSRCS ${BLUETOOTH_DIR}/service/stacks/zephyr/sal_hfp_hf_interface.c)
       endif()
@@ -443,6 +457,10 @@ if(CONFIG_BLUETOOTH)
 
     if(CONFIG_BLUETOOTH_HID_DEVICE)
       list(APPEND CSRCS ${BLUETOOTH_DIR}/service/profiles/hid/hid_device_service.c)
+    endif()
+
+    if(CONFIG_BLUETOOTH_HID_HOST)
+      list(APPEND CSRCS ${BLUETOOTH_DIR}/service/profiles/hid/hid_host_service.c)
     endif()
 
     if(CONFIG_BLUETOOTH_PAN)
@@ -630,6 +648,10 @@ if(CONFIG_BLUETOOTH)
 
     if(CONFIG_BLUETOOTH_HID_DEVICE)
       list(APPEND CSRCS ${BLUETOOTH_DIR}/tools/hid_device.c)
+    endif()
+
+    if(CONFIG_BLUETOOTH_HID_HOST)
+      list(APPEND CSRCS ${BLUETOOTH_DIR}/tools/hid_host.c)
     endif()
 
     if(CONFIG_BLUETOOTH_PAN)
